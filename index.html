@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GPO Boss Spawn Timer</title>
+  <link rel="icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Finger+Paint&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Finger Paint', cursive;
+    }
+
+    body {
+      background: 
+        linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
+        url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      background-color: #000;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .content-box {
+      background-color: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.7);
+    }
+
+    h1 {
+      font-size: 2.2em;
+      color: #ffc764;
+      margin-bottom: 10px;
+    }
+
+    .bosses {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    .countdown {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      color: #ffc764;
+    }
+
+    .timer {
+      font-size: 1.1em;
+      margin-bottom: 15px;
+      color: #9e9e9e;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .controls label {
+      display: flex;
+      align-items: center;
+    }
+
+    .controls input[type="checkbox"] {
+      margin-right: 5px;
+    }
+
+    #testSoundBtn, #notificationBtn {
+      padding: 8px 16px;
+      background-color: transparent;
+      border: 2px solid #ffc764;
+      border-radius: 6px;
+      color: #ffc764;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      font-family: 'Finger Paint', cursive;
+    }
+
+    #testSoundBtn:hover, #notificationBtn:hover {
+      background-color: rgba(255, 199, 100, 0.1);
+    }
+
+    #testSoundBtn.playing {
+      background-color: #ffc764 !important;
+      color: #000 !important;
+      border-color: #cc9c4c !important;
+    }
+
+    #notificationBtn.enabled {
+      background-color: #ffc764;
+      color: #000;
+    }
+
+    #notificationBtn.disabled {
+      background-color: #444;
+      color: #ccc;
+    }
+
+    #bossDetailsContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .boss-box {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 15px;
+      width: 220px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.6);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .boss-box img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .boss-box h3 {
+      font-size: 1.3em;
+      margin-bottom: 5px;
+      color: #ffc764;
+    }
+
+    .boss-box p {
+      font-size: 0.95em;
+      margin: 2px 0;
+    }
+
+    @media (max-width: 600px) {
+      #bossDetailsContainer {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .boss-box {
+        flex-direction: row;
+        width: 90%;
+        max-width: 400px;
+        text-align: left;
+        padding: 10px;
+      }
+
+      .boss-box img {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 0;
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+
+      .boss-box .info {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="content-box">
+      <h1>GPO Boss Spawn Timer</h1>
+      <div class="bosses" id="bosses">Next Spawn (00:00): Roger</div>
+      <div class="countdown" id="countdown">Time Until Next Spawn: 00:00</div>
+      <div class="timer" id="timer">Current Time: 00:00:00</div>
+      <div class="controls">
+        <label><input type="checkbox" id="soundToggle"> Sound Enabled</label>
+        <button id="testSoundBtn" onclick="playSound()">Test Sound</button>
+        <button id="notificationBtn">Enable Notifications?</button>
+      </div>
+    </div>
+    <div id="bossDetailsContainer"></div>
+  </div>
+
+  <audio id="bossSound" src="https://www.myinstants.com/media/sounds/tmpyoefqts5.mp3"></audio>
+
+  <script>
+    const spawnSchedule = {
+  "00:00": ["Roger", "Kizaru"],
+  "00:30": ["Kizaru"],
+  "01:00": ["Mihawk", "Kizaru"],
+  "01:30": ["Kizaru"],
+  "02:00": ["Brook", "Kizaru"],
+  "02:30": ["Kizaru"],
+  "03:00": ["Roger", "Kizaru"],
+  "03:30": ["Kizaru"],
+  "04:00": ["Mihawk", "Kizaru"],
+  "04:30": ["Kizaru"],
+  "05:00": ["Brook", "Kizaru"],
+  "05:30": ["Kizaru"],
+  "06:00": ["Roger", "Kizaru"],
+  "06:30": ["Kizaru"],
+  "07:00": ["Mihawk", "Kizaru"],
+  "07:30": ["Kizaru"],
+  "08:00": ["Brook", "Kizaru"],
+  "08:30": ["Kizaru"],
+  "09:00": ["Roger", "Kizaru"],
+  "09:30": ["Kizaru"],
+  "10:00": ["Mihawk", "Kizaru"],
+  "10:30": ["Kizaru"],
+  "11:00": ["Brook", "Kizaru"],
+  "11:30": ["Kizaru"],
+  "12:00": ["Roger", "Kizaru"],
+  "12:30": ["Kizaru"],
+  "13:00": ["Mihawk", "Kizaru"],
+  "13:30": ["Kizaru"],
+  "14:00": ["Brook", "Kizaru"],
+  "14:30": ["Kizaru"],
+  "15:00": ["Roger", "Kizaru"],
+  "15:30": ["Kizaru"],
+  "16:00": ["Mihawk", "Kizaru"],
+  "16:30": ["Kizaru"],
+  "17:00": ["Brook", "Kizaru"],
+  "17:30": ["Kizaru"],
+  "18:00": ["Roger", "Kizaru"],
+  "18:30": ["Kizaru"],
+  "19:00": ["Mihawk", "Kizaru"],
+  "19:30": ["Kizaru"],
+  "20:00": ["Brook", "Kizaru"],
+  "20:30": ["Kizaru"],
+  "21:00": ["Roger", "Kizaru"],
+  "21:30": ["Kizaru"],
+  "22:00": ["Mihawk", "Kizaru"],
+  "22:30": ["Kizaru"],
+  "23:00": ["Brook", "Kizaru"],
+  "23:30": ["Kizaru"]
+};
+
+    const bossImages = {
+      "Roger": "images/roger.png",
+      "Mihawk": "images/mihawk.png",
+      "Brook": "images/brook.png",
+      "Kizaru": "images/kizaru.png"
+    };
+
+    const bossList = ["Roger", "Mihawk", "Brook", "Kizaru"];
+    const lastSpawnMap = {};
+    const soundToggle = document.getElementById("soundToggle");
+    let lastCheckedMinute = null;
+
+    function playSound() {
+      const sound = document.getElementById('bossSound');
+      const btn = document.getElementById('testSoundBtn');
+      btn.classList.add('playing');
+      sound.currentTime = 0;
+      sound.play().catch((e) => console.warn("Audio autoplay blocked:", e));
+      sound.onended = () => btn.classList.remove('playing');
+    }
+
+    function getNextSpawn(now) {
+      const upcomingTimes = Object.keys(spawnSchedule).sort();
+      for (let time of upcomingTimes) {
+        const [h, m] = time.split(":").map(Number);
+        const spawnDate = new Date(now);
+        spawnDate.setHours(h, m, 0, 0);
+        if (spawnDate > now) return { time, spawnDate };
+      }
+      const [h, m] = upcomingTimes[0].split(":"), next = new Date(now);
+      next.setDate(now.getDate() + 1);
+      next.setHours(h, m, 0, 0);
+      return { time: upcomingTimes[0], spawnDate: next };
+    }
+
+    function getNextSpawnTimesForBoss(boss, now) {
+      const schedule = Object.entries(spawnSchedule).filter(([time, bosses]) => bosses.includes(boss));
+      for (let [time] of schedule.sort()) {
+        const [h, m] = time.split(":").map(Number);
+        const spawnDate = new Date(now);
+        spawnDate.setHours(h, m, 0, 0);
+        if (spawnDate > now) return { time, spawnDate };
+      }
+      const [h, m] = schedule[0][0].split(":"), next = new Date(now);
+      next.setDate(now.getDate() + 1);
+      next.setHours(h, m, 0, 0);
+      return { time: schedule[0][0], spawnDate: next };
+    }
+
+    function updateTimer() {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      const currentTime = `${hours}:${minutes}:${seconds}`;
+      const currentHM = `${hours}:${minutes}`;
+      document.getElementById("timer").textContent = `Current Time: ${currentTime}`;
+      const { time: nextSpawnTime, spawnDate } = getNextSpawn(now);
+      const bosses = spawnSchedule[nextSpawnTime] || ["Nothing"];
+      document.getElementById("bosses").textContent = `Next Spawn (${nextSpawnTime}): ${bosses.join(", ")}`;
+      const diffMs = spawnDate - now;
+      const diffSec = Math.floor(diffMs / 1000);
+      const countdown = `${Math.floor(diffSec / 60).toString().padStart(2, '0')}:${(diffSec % 60).toString().padStart(2, '0')}`;
+      document.getElementById("countdown").textContent = `Time Until Next Spawn: ${countdown}`;
+
+      bossList.forEach(boss => {
+        let lastTime = "--:--";
+        for (let time of Object.keys(spawnSchedule).sort().reverse()) {
+          const [h, m] = time.split(":").map(Number);
+          const dateCheck = new Date(now);
+          dateCheck.setHours(h, m, 0, 0);
+          if (dateCheck <= now && spawnSchedule[time].includes(boss)) {
+            lastTime = time;
+            break;
+          }
+        }
+        lastSpawnMap[boss] = lastTime;
+      });
+
+      if (spawnSchedule[currentHM] && lastCheckedMinute !== currentHM) {
+        if (soundToggle.checked) playSound();
+        if (Notification.permission === "granted") {
+          new Notification("Boss Spawn!", {
+            body: "Check the boss timer!",
+            icon: "favicon.ico"
+          });
+        }
+      }
+      lastCheckedMinute = currentHM;
+
+      const container = document.getElementById("bossDetailsContainer");
+      container.innerHTML = "";
+      bossList.forEach(boss => {
+        const { time, spawnDate } = getNextSpawnTimesForBoss(boss, now);
+        const diff = Math.floor((spawnDate - now) / 1000);
+        const hh = Math.floor(diff / 3600).toString().padStart(2, '0');
+        const mm = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+        const ss = (diff % 60).toString().padStart(2, '0');
+        const timeLeft = `${hh}:${mm}:${ss}`;
+        const lastSeen = lastSpawnMap[boss];
+        const div = document.createElement("div");
+        div.className = "boss-box";
+        div.innerHTML = `
+          <img src="${bossImages[boss]}" alt="${boss}">
+          <div class="info">
+            <h3>${boss}</h3>
+            <p>Next Spawn: ${time}</p>
+            <p>Time Left: ${timeLeft}</p>
+            <p style="color: rgb(164, 164, 164);">Last Spawned: ${lastSeen}</p>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    const notificationBtn = document.getElementById('notificationBtn');
+
+    function updateNotificationButton() {
+      const permission = Notification.permission;
+      if (permission === "granted") {
+        notificationBtn.textContent = "Notifications Enabled";
+        notificationBtn.classList.add("enabled");
+        notificationBtn.classList.remove("disabled");
+      } else if (permission === "denied") {
+        notificationBtn.textContent = "Notifications Disabled";
+        notificationBtn.classList.add("disabled");
+        notificationBtn.classList.remove("enabled");
+      } else {
+        notificationBtn.textContent = "Enable Notifications?";
+        notificationBtn.classList.remove("enabled", "disabled");
+      }
+    }
+
+    notificationBtn.addEventListener('click', () => {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then(updateNotificationButton);
+      } else {
+        updateNotificationButton();
+      }
+    });
+
+    soundToggle.addEventListener("change", () => {
+      localStorage.setItem("soundEnabled", soundToggle.checked ? "true" : "false");
+    });
+
+    const savedSound = localStorage.getItem("soundEnabled");
+    if (savedSound !== null) {
+      soundToggle.checked = savedSound === "true";
+    } else {
+      soundToggle.checked = true;
+    }
+
+    updateNotificationButton();
+    updateTimer();
+    setInterval(updateTimer, 1000);
+  </script>
+</body>
+</html>
