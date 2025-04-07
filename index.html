@@ -406,6 +406,14 @@
     }
 
     updateNotificationButton();
+    window.addEventListener("click", () => {
+  const audio = document.getElementById('bossSound');
+  audio.play().then(() => {
+    audio.pause(); // pausa logo depois pra não fazer barulho
+    audio.currentTime = 0;
+    console.log("Audio unlocked");
+  }).catch(e => console.warn("Autoplay still blocked", e));
+}, { once: true });
     updateTimer();
     setInterval(updateTimer, 1000);
   </script>
