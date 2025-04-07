@@ -200,7 +200,7 @@
   <audio id="bossSound" src="abossspawned.wav"></audio>
 
   <script>
-  const spawnSchedule = {
+     const spawnSchedule = {
   "00:00": ["Roger", "Kizaru"],
   "00:30": ["Kizaru"],
   "01:00": ["Brook", "Mihawk", "Kizaru"],
@@ -334,11 +334,12 @@
       if (spawnSchedule[currentHM] && lastCheckedMinute !== currentHM) {
         if (soundToggle.checked) playSound();
         if (Notification.permission === "granted") {
-          new Notification("Boss Spawn!", {
-            body: "Check the boss timer!",
-            icon: "favicon.ico"
-          });
-        }
+  const bossNames = spawnSchedule[currentHM].join(", ");
+  new Notification("Boss Spawn!", {
+    body: `Bosses: ${bossNames}`,
+    icon: "favicon.ico"
+  });
+}
       }
       lastCheckedMinute = currentHM;
 
