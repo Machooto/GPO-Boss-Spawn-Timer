@@ -98,12 +98,6 @@
       background-color: rgba(255, 199, 100, 0.1);
     }
 
-    #testSoundBtn.playing {
-      background-color: #ffc764 !important;
-      color: #000 !important;
-      border-color: #cc9c4c !important;
-    }
-
     #notificationBtn.enabled {
       background-color: #ffc764;
       color: #000;
@@ -200,7 +194,7 @@
   <audio id="bossSound" src="abossspawned.wav"></audio>
 
   <script>
-     const spawnSchedule = {
+    const spawnSchedule = {
   "00:00": ["Roger", "Kizaru"],
   "00:30": ["Kizaru"],
   "01:00": ["Brook", "Mihawk", "Kizaru"],
@@ -400,20 +394,10 @@
 
     const savedSound = localStorage.getItem("soundEnabled");
     if (savedSound !== null) {
-      soundToggle.checked = savedSound === "true";
-    } else {
-      soundToggle.checked = true;
-    }
+      soundToggle.checked = savedSound === "false";
+    } 
 
     updateNotificationButton();
-    window.addEventListener("click", () => {
-  const audio = document.getElementById('bossSound');
-  audio.play().then(() => {
-    audio.pause(); // pausa logo depois pra não fazer barulho
-    audio.currentTime = 0;
-    console.log("Audio unlocked");
-  }).catch(e => console.warn("Autoplay still blocked", e));
-}, { once: true });
     updateTimer();
     setInterval(updateTimer, 1000);
   </script>
