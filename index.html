@@ -273,6 +273,10 @@
   font-weight: bold;
   cursor: pointer;
 }
+.highlight-boss {
+  color: #ffc764;
+  font-weight: bold;
+}
   </style>
 </head>
 <body>
@@ -512,17 +516,27 @@
   const scheduleList = document.getElementById("scheduleList");
 
   btn.onclick = function () {
-    scheduleList.innerHTML = '';
-    const entries = Object.entries(spawnSchedule).sort(([a], [b]) => {
-      return a.localeCompare(b);
-    });
-    for (let [time, bosses] of entries) {
-      const li = document.createElement("li");
-      li.textContent = `${time} - ${bosses.join(", ")}`;
-      scheduleList.appendChild(li);
-    }
-    modal.style.display = "block";
+  scheduleList.innerHTML = '';
+  const now = new Date();
+const { time: nextSpawnTime } = getNextSpawn(now);
+
+const entries = Object.entries(spawnSchedule).sort(([a], [b]) => a.localeCompare(b));
+
+for (let [time, bosses] of entries) {
+  const li = document.createElement("li");
+
+  if (time === nextSpawnTime) {
+    const highlightedBosses = bosses.map(boss => `<span class="highlight-boss">${boss}</span>`).join(", ");
+    li.innerHTML = `${time} - ${highlightedBosses}`;
+  } else {
+    li.textContent = `${time} - ${bosses.join(", ")}`;
   }
+
+  scheduleList.appendChild(li);
+}
+
+  modal.style.display = "block";
+};
 
   span.onclick = function () {
     modal.style.display = "none";
