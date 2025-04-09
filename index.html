@@ -83,7 +83,7 @@
       margin-right: 5px;
     }
 
-    #testSoundBtn, #notificationBtn {
+    #testSoundBtn, #notificationBtn, #openScheduleBtn {
       padding: 8px 16px;
       background-color: transparent;
       border: 2px solid #ffc764;
@@ -94,7 +94,7 @@
       font-family: 'Finger Paint', cursive;
     }
 
-    #testSoundBtn:hover, #notificationBtn:hover {
+    #testSoundBtn:hover, #notificationBtn, #openScheduleBtn:hover {
       background-color: rgba(255, 199, 100, 0.1);
     }
 
@@ -172,7 +172,107 @@
       .boss-box .info {
         flex: 1;
       }
+
+      .modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.modal-content {
+  background-color: #1e1e1e;
+  margin: 60px auto;
+  padding: 20px;
+  border: 2px solid #ffc764;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.7);
+}
+
+.modal-content h2 {
+  text-align: center;
+  color: #ffc764;
+  margin-bottom: 20px;
+}
+
+.modal-content ul {
+  list-style: none;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modal-content ul li {
+  padding: 5px 0;
+  border-bottom: 1px solid #333;
+}
+
+.close-button {
+  color: #ffc764;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
     }
+
+    .modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.modal-content {
+  background-color: #1e1e1e;
+  margin: 60px auto;
+  padding: 20px;
+  border: 2px solid #ffc764;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.7);
+}
+
+.modal-content h2 {
+  text-align: center;
+  color: #ffc764;
+  margin-bottom: 20px;
+}
+
+.modal-content ul {
+  list-style: none;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.modal-content ul li {
+  padding: 5px 0;
+  border-bottom: 1px solid #333;
+}
+
+.close-button {
+  color: #ffc764;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
   </style>
 </head>
 <body>
@@ -186,12 +286,21 @@
         <label><input type="checkbox" id="soundToggle"> Sound Enabled</label>
         <button id="testSoundBtn" onclick="playSound()">Test Sound</button>
         <button id="notificationBtn">Enable Notifications?</button>
+        <button id="openScheduleBtn">View Schedule</button>
       </div>
     </div>
     <div id="bossDetailsContainer"></div>
   </div>
 
   <audio id="bossSound" src="abossspawned.wav"></audio>
+
+  <div id="scheduleModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>Boss Spawn Schedule</h2>
+      <ul id="scheduleList"></ul>
+    </div>
+  </div>
 
   <script>
     const spawnSchedule = {
@@ -396,6 +505,34 @@
     if (savedSound !== null) {
       soundToggle.checked = savedSound === "false";
     } 
+
+    const modal = document.getElementById("scheduleModal");
+  const btn = document.getElementById("openScheduleBtn");
+  const span = document.querySelector(".close-button");
+  const scheduleList = document.getElementById("scheduleList");
+
+  btn.onclick = function () {
+    scheduleList.innerHTML = '';
+    const entries = Object.entries(spawnSchedule).sort(([a], [b]) => {
+      return a.localeCompare(b);
+    });
+    for (let [time, bosses] of entries) {
+      const li = document.createElement("li");
+      li.textContent = `${time} - ${bosses.join(", ")}`;
+      scheduleList.appendChild(li);
+    }
+    modal.style.display = "block";
+  }
+
+  span.onclick = function () {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function (event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
 
     updateNotificationButton();
     updateTimer();
